@@ -1,0 +1,13 @@
+streamlit
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+beautifulsoup4
+pypdf2
+langchain
+langchain-google-genai
+faiss-cpu
+crewai
+langgraph
+pillow
