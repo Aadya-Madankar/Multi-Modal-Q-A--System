@@ -1,3 +1,5 @@
+#Importing Libraries
+
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -17,36 +19,39 @@ except ImportError:
 
 import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
-# from langchain.chains.question_answering import load_qa_chain # Deprecated
-from langchain.chains.combine_documents import create_stuff_documents_chain # New way for "stuff"
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate # ChatPromptTemplate is often preferred
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.runnables import RunnablePassthrough # For passing things through in chains
-from langchain_core.output_parsers import StrOutputParser # For simple string output
+from langchain_core.output_parsers import StrOutputParser
 
 from dotenv import load_dotenv
 
-# --- Configuration --- (Identical to previous)
+# Configuration
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
+#check the api key 
 if not GOOGLE_API_KEY:
-    print("🔴 Google API Key not found. Please set GOOGLE_API_KEY in .env")
+    print("Google API Key not found. Please set GOOGLE_API_KEY in .env")
 else:
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
     except Exception as e:
-        print(f"🔴 Error configuring Google GenAI: {e}. Is your API key valid?")
+        print(f"Error configuring Google GenAI: {e}. Is your API key valid?")
 
+# Add models based on their usecase
 EMBEDDING_MODEL_NAME = "models/embedding-001"
-CHAT_MODEL_NAME = "gemini-1.5-flash"
+CHAT_MODEL_NAME = "gemini-2.0-flash"
+
+# Directories
 FAISS_INDEX_DIR = "FAISS_INDEX"
 UPLOAD_DIR = "TEMP_UPLOADS"
 MAX_IMAGES_FROM_URL = 5
+# CHunk size variable
 TEXT_CHUNK_SIZE = 10000
 TEXT_CHUNK_OVERLAP = 1000
 os.makedirs(FAISS_INDEX_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-# --- End Configuration ---
+
 
 
 # --- Document Parsing Logic --- (Identical to previous)
@@ -172,15 +177,6 @@ def get_conversational_qa_chain(): # Renamed, was get_conversational_chain previ
         print("Cannot get QA chain: GOOGLE_API_KEY not configured.")
         return None
     
-    # Using ChatPromptTemplate for more flexibility if system messages are needed later
-    # For simple "stuff" prompt, PromptTemplate is also fine.
-    # The system message is implicitly handled by Gemini if you structure the prompt well.
-    # If you wanted an explicit system message for Gemini, you'd often prepend it to the user's query.
-    # Or use specific message types like SystemMessage, HumanMessage from langchain_core.messages
-    
-    # Updated prompt for clarity and to use input_variables expected by create_stuff_documents_chain
-    # The chain expects "context" (from documents) and "input" (the user's question).
-    # If you use a different variable for question (e.g. "question"), you map it when invoking.
     prompt_str = """
     You are an AI assistant. Answer the following question based ONLY on the provided context.
     If the answer is not found in the context, state "The answer is not available in the provided context."
